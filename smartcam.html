@@ -839,588 +839,286 @@
             }
         }
 
-        /* 手机端适配 (< 768px) - 现代美观设计 */
+        /* 手机端适配 (< 768px) - 紧凑设计 */
         @media screen and (max-width: 767px) {
             html, body {
                 height: 100%;
-                overflow: hidden;
+                overflow: auto;
             }
 
             .app-container {
-                display: grid;
-                grid-template-columns: 1fr;
-                grid-template-rows: 50px 1fr;
-                height: 100vh;
-                gap: 0;
-                padding: 0;
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+                gap: 4px;
+                padding: 4px;
             }
 
-            /* Header - 渐变背景 */
+            /* Header 紧凑 */
             .header {
-                padding: 0 16px;
-                min-height: 50px;
-                height: 50px;
-                border-radius: 0;
-                border: none;
-                background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                padding: 0 8px;
+                min-height: 36px;
+                position: sticky;
+                top: 0;
+                z-index: 100;
             }
 
             .header h1 {
-                font-size: 1.1rem;
-                gap: 8px;
-                background: linear-gradient(90deg, #f0883e, #ff9d5c);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+                font-size: 0.85rem;
             }
 
             .header h1 svg {
-                width: 22px;
-                height: 22px;
-            }
-
-            .header-actions {
-                gap: 10px;
-            }
-
-            .icon-btn {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-                gap: 4px;
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 20px;
-            }
-
-            .icon-btn svg {
                 width: 16px;
                 height: 16px;
             }
 
-            /* 左侧面板 - 隐藏 */
-            .left-panel {
-                display: none;
+            .header-actions {
+                gap: 4px;
             }
 
-            /* 手机端浮动工具栏 - 毛玻璃效果 */
-            .mobile-toolbar {
-                position: fixed;
-                bottom: 24px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 200;
-                gap: 20px;
-                background: linear-gradient(135deg, rgba(30, 35, 50, 0.95) 0%, rgba(20, 25, 35, 0.95) 100%);
-                padding: 16px 32px;
-                border-radius: 40px;
-                border: 1px solid rgba(255,255,255,0.1);
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
-                backdrop-filter: blur(10px);
+            .icon-btn {
+                padding: 4px 6px;
+                font-size: 0.65rem;
             }
 
-            .mobile-toolbar-left,
-            .mobile-toolbar-right {
-                display: flex;
-                gap: 16px;
-            }
-
-            .mobile-btn {
-                width: 56px;
-                height: 56px;
-                background: linear-gradient(145deg, #2a3040 0%, #1a1f2e 100%);
-                border: none;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: var(--text-primary);
-                font-size: 1.5rem;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .mobile-btn:active {
-                transform: scale(0.92);
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            }
-
-            .mobile-btn.primary {
-                background: linear-gradient(145deg, #ff9d5c 0%, #f0883e 100%);
-                color: white;
-                box-shadow: 0 4px 16px rgba(240, 136, 62, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-            }
-
-            /* 弹出式设置面板 - 滑入动画 */
-            .mobile-popup {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
-                padding: 24px;
-                padding-bottom: 120px;
-                z-index: 300;
-                overflow-y: auto;
-                display: none;
-            }
-
-            .mobile-popup.active {
-                display: block;
-                animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            @keyframes slideInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .mobile-popup-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 28px;
-                padding-bottom: 20px;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-
-            .mobile-popup-title {
-                font-size: 1.5rem;
-                font-weight: 700;
-                background: linear-gradient(90deg, #f0883e, #58a6ff);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-
-            .mobile-popup-close {
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(145deg, #2a3040 0%, #1a1f2e 100%);
-                border: none;
-                border-radius: 50%;
-                color: var(--text-primary);
-                font-size: 1.5rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            }
-
-            /* 快速设置项 - 卡片设计 */
-            .mobile-quick-settings {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
-                margin-bottom: 28px;
-            }
-
-            .mobile-quick-item {
-                background: linear-gradient(145deg, #1e2433 0%, #161b22 100%);
-                border-radius: 20px;
-                padding: 20px;
-                text-align: center;
-                cursor: pointer;
-                border: 2px solid transparent;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            }
-
-            .mobile-quick-item.active {
-                border-color: var(--color-primary);
-                background: linear-gradient(145deg, rgba(240, 136, 62, 0.15) 0%, rgba(240, 136, 62, 0.05) 100%);
-                box-shadow: 0 4px 20px rgba(240, 136, 62, 0.2);
-            }
-
-            .mobile-quick-item .icon {
-                font-size: 2.2rem;
-                margin-bottom: 10px;
-                display: block;
-            }
-
-            .mobile-quick-item .label {
-                font-size: 1rem;
-                color: var(--text-secondary);
-                font-weight: 500;
-            }
-
-            .mobile-quick-item.active .label {
-                color: var(--color-primary);
-                font-weight: 700;
-            }
-
-            /* 详细设置分组 */
-            .mobile-setting-group {
-                margin-bottom: 28px;
-            }
-
-            .mobile-setting-label {
-                font-size: 1.1rem;
-                color: var(--text-secondary);
-                margin-bottom: 14px;
-                display: block;
-                font-weight: 600;
-                letter-spacing: 0.5px;
-            }
-
-            .mobile-mode-selector {
-                display: flex;
-                gap: 12px;
-                overflow-x: auto;
-                padding-bottom: 8px;
-            }
-
-            .mobile-mode-btn {
-                flex-shrink: 0;
-                padding: 14px 28px;
-                background: linear-gradient(145deg, #1e2433 0%, #161b22 100%);
-                border: 2px solid rgba(255,255,255,0.1);
-                border-radius: 30px;
-                color: var(--text-secondary);
-                font-size: 1rem;
-                font-weight: 500;
-                cursor: pointer;
-                white-space: nowrap;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .mobile-mode-btn.active {
-                background: linear-gradient(145deg, #ff9d5c 0%, #f0883e 100%);
-                border-color: transparent;
-                color: white;
-                font-weight: 700;
-                box-shadow: 0 4px 16px rgba(240, 136, 62, 0.4);
-            }
-
-            /* 模型选择 */
-            .mobile-model-selector {
-                display: flex;
-                gap: 16px;
-            }
-
-            .mobile-model-btn {
-                flex: 1;
-                padding: 20px;
-                background: linear-gradient(145deg, #1e2433 0%, #161b22 100%);
-                border: 2px solid rgba(255,255,255,0.1);
-                border-radius: 20px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .mobile-model-btn.active {
-                border-color: var(--color-success);
-                background: linear-gradient(145deg, rgba(63, 185, 80, 0.15) 0%, rgba(63, 185, 80, 0.05) 100%);
-                box-shadow: 0 4px 20px rgba(63, 185, 80, 0.2);
-            }
-
-            .mobile-model-btn .name {
-                font-size: 1.1rem;
-                font-weight: 700;
-                color: var(--text-primary);
-                display: block;
-                margin-bottom: 6px;
-            }
-
-            .mobile-model-btn .desc {
-                font-size: 0.85rem;
-                color: var(--text-secondary);
-            }
-
-            /* 类别选择 */
-            .mobile-class-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 14px;
-            }
-
-            .mobile-class-btn {
-                aspect-ratio: 1;
-                background: linear-gradient(145deg, #1e2433 0%, #161b22 100%);
-                border: 2px solid rgba(255,255,255,0.1);
-                border-radius: 20px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                cursor: pointer;
-                font-size: 1.8rem;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .mobile-class-btn .label {
-                font-size: 0.8rem;
-                color: var(--text-secondary);
-                font-weight: 500;
-            }
-
-            .mobile-class-btn.active {
-                border-color: var(--color-accent);
-                background: linear-gradient(145deg, rgba(88, 166, 255, 0.15) 0%, rgba(88, 166, 255, 0.05) 100%);
-                box-shadow: 0 4px 16px rgba(88, 166, 255, 0.2);
-            }
-
-            .mobile-class-btn.active .label {
-                color: var(--color-accent);
-                font-weight: 700;
-            }
-
-            /* 滑块设置 */
-            .mobile-slider-setting {
-                background: linear-gradient(145deg, #1e2433 0%, #161b22 100%);
-                border-radius: 20px;
-                padding: 20px;
-            }
-
-            .mobile-slider-header {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 16px;
-            }
-
-            .mobile-slider-label {
-                font-size: 1.1rem;
-                color: var(--text-secondary);
-                font-weight: 500;
-            }
-
-            .mobile-slider-value {
-                font-size: 1.2rem;
-                background: linear-gradient(90deg, #f0883e, #ff9d5c);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                font-weight: 700;
-            }
-
-            .mobile-slider {
-                width: 100%;
-                height: 12px;
-                -webkit-appearance: none;
-                background: linear-gradient(90deg, #2a3040, #1a1f2e);
-                border-radius: 6px;
-                outline: none;
-            }
-
-            .mobile-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                width: 32px;
-                height: 32px;
-                background: linear-gradient(145deg, #ff9d5c 0%, #f0883e 100%);
-                border-radius: 50%;
-                cursor: pointer;
-                box-shadow: 0 2px 8px rgba(240, 136, 62, 0.4);
-            }
-
-            /* 开关设置 */
-            .mobile-toggle-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-            }
-
-            .mobile-toggle-row:last-child {
-                border-bottom: none;
-            }
-
-            .mobile-toggle-label {
-                font-size: 1rem;
-                color: var(--text-primary);
-                font-weight: 500;
-            }
-
-            .mobile-toggle {
-                width: 56px;
-                height: 30px;
-                background: linear-gradient(145deg, #2a3040 0%, #1a1f2e 100%);
-                border-radius: 15px;
-                position: relative;
-                cursor: pointer;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .mobile-toggle.active {
-                background: linear-gradient(145deg, #4ade80 0%, #22c55e 100%);
-                box-shadow: 0 2px 12px rgba(34, 197, 94, 0.4);
-            }
-
-            .mobile-toggle::after {
-                content: '';
-                position: absolute;
-                width: 24px;
-                height: 24px;
-                background: white;
-                border-radius: 50%;
-                top: 3px;
-                left: 3px;
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            }
-
-            .mobile-toggle.active::after {
-                transform: translateX(26px);
-            }
-
-            /* 遮罩层 */
-            .mobile-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.7);
-                backdrop-filter: blur(4px);
-                z-index: 240;
-                display: none;
-            }
-
-            .mobile-overlay.active {
-                display: block;
-            }
-
-            /* 视频区域 - 全屏 */
-            .video-panel {
-                order: 2;
-                min-height: 0;
-                max-height: none;
-                border-radius: 0;
-                border: none;
-                background: #000;
-            }
-
-            .video-container {
-                min-height: 0;
-            }
-
-            .video-overlay {
-                top: 12px;
-                left: 12px;
-                right: 12px;
-            }
-
-            .overlay-badge {
-                padding: 6px 14px;
-                font-size: 0.85rem;
-                gap: 8px;
-                background: rgba(0,0,0,0.6);
-                backdrop-filter: blur(8px);
-                border-radius: 20px;
-            }
-
-            .overlay-badge .dot {
+            .icon-btn svg {
                 width: 10px;
                 height: 10px;
             }
 
+            /* 左侧面板 - 紧凑 */
+            .left-panel {
+                gap: 4px;
+                order: 2;
+            }
+
+            .panel-section {
+                padding: 6px;
+            }
+
+            .panel-title {
+                font-size: 0.7rem;
+                margin-bottom: 4px;
+            }
+
+            /* 模式选择器 - 紧凑 */
+            .mode-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 3px;
+            }
+
+            .mode-btn {
+                padding: 6px 2px;
+                font-size: 0.6rem;
+                min-height: auto;
+            }
+
+            .mode-btn .icon {
+                font-size: 1rem;
+            }
+
+            /* 类别选择器 - 紧凑 */
+            .class-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 3px;
+            }
+
+            .class-btn {
+                padding: 5px 3px;
+                font-size: 0.6rem;
+                justify-content: center;
+                min-height: auto;
+            }
+
+            /* 设置项 - 紧凑 */
+            .setting-item {
+                margin-bottom: 6px;
+            }
+
+            .setting-label {
+                font-size: 0.65rem;
+            }
+
+            select, input[type="range"] {
+                padding: 5px;
+                font-size: 0.75rem;
+            }
+
+            /* 模型切换 - 紧凑 */
+            .model-toggle-row {
+                flex-direction: row;
+                gap: 4px;
+            }
+
+            .model-btn {
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 6px 4px;
+                flex: 1;
+                min-height: auto;
+            }
+
+            .model-name {
+                font-size: 0.65rem;
+            }
+
+            .model-status {
+                font-size: 0.55rem;
+            }
+
+            .model-desc {
+                display: none !important;
+            }
+
+            /* 视频区域 - 紧凑 */
+            .video-panel {
+                order: 1;
+                min-height: 35vh;
+                max-height: 45vh;
+            }
+
+            .video-container {
+                min-height: 150px;
+            }
+
+            .video-overlay {
+                top: 4px;
+                left: 4px;
+                right: 4px;
+            }
+
+            .overlay-badge {
+                padding: 2px 6px;
+                font-size: 0.6rem;
+            }
+
             .stats-group {
-                gap: 10px;
+                gap: 4px;
             }
 
             .stat-badge {
-                padding: 6px 14px;
-                font-size: 0.8rem;
-                background: rgba(0,0,0,0.6);
-                backdrop-filter: blur(8px);
-                border-radius: 20px;
+                padding: 2px 6px;
+                font-size: 0.55rem;
             }
 
             .stat-badge .value {
-                font-size: 1rem;
+                font-size: 0.75rem;
             }
 
             .alert-banner {
-                padding: 12px 24px;
-                font-size: 1rem;
-                border-radius: 30px;
+                padding: 6px 10px;
+                font-size: 0.75rem;
             }
 
-            /* 视频控制按钮 - 隐藏 */
+            /* 视频控制按钮 - 紧凑 */
             .video-controls {
-                display: none;
+                padding: 6px;
+                gap: 4px;
+                flex-wrap: wrap;
             }
 
-            /* 右侧面板 - 隐藏 */
+            .control-btn {
+                flex: 1;
+                min-width: 60px;
+                padding: 6px 8px;
+                font-size: 0.65rem;
+                justify-content: center;
+                min-height: auto;
+            }
+
+            /* 右侧面板 - 检测记录紧凑 */
             .right-panel {
-                display: none;
+                order: 3;
+                max-height: 180px;
+            }
+
+            .records-header {
+                padding: 6px;
+            }
+
+            .records-title {
+                font-size: 0.7rem;
+            }
+
+            .records-list {
+                padding: 4px;
+            }
+
+            .record-item {
+                padding: 6px;
+                margin-bottom: 4px;
+            }
+
+            .record-thumbnail {
+                height: 60px;
+            }
+
+            .record-time {
+                font-size: 0.6rem;
+            }
+
+            .record-info {
+                font-size: 0.7rem;
             }
 
             /* 图片模态框 */
             .image-modal {
-                padding: 16px;
+                padding: 6px;
             }
 
             .image-modal-close {
-                top: 16px;
-                right: 16px;
-                width: 44px;
-                height: 44px;
-                font-size: 1.4rem;
-                background: rgba(0,0,0,0.6);
-                backdrop-filter: blur(8px);
+                top: 6px;
+                right: 6px;
+                width: 28px;
+                height: 28px;
+                font-size: 1rem;
             }
 
             /* 权限提示 */
-            .permission-overlay {
-                gap: 20px;
-            }
-
             .permission-overlay svg {
-                width: 56px;
-                height: 56px;
+                width: 32px;
+                height: 32px;
             }
 
             .permission-overlay p {
-                font-size: 1rem;
-                padding: 0 32px;
+                font-size: 0.75rem;
+                text-align: center;
+                padding: 0 12px;
             }
 
             .btn-primary {
-                padding: 14px 32px;
-                font-size: 1rem;
-                border-radius: 30px;
-                background: linear-gradient(145deg, #ff9d5c 0%, #f0883e 100%);
-                box-shadow: 0 4px 16px rgba(240, 136, 62, 0.4);
+                padding: 8px 16px;
+                font-size: 0.8rem;
             }
 
-            /* 触摸优化 */
-            .mobile-btn, .mobile-quick-item, .mobile-mode-btn, .mobile-class-btn, .mobile-model-btn {
+            /* 触摸优化 - 移除固定高度 */
+            .mode-btn, .class-btn, .control-btn, .icon-btn, .model-btn {
                 -webkit-tap-highlight-color: transparent;
             }
 
-            /* 隐藏滚动条 */
+            /* 隐藏滚动条但保持功能 */
             ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
+                width: 2px;
+                height: 2px;
             }
         }
 
-        /* 小屏手机 (< 480px) */
+        /* 小屏手机 (< 480px) - 超紧凑 */
         @media screen and (max-width: 480px) {
             .app-container {
-                padding: 6px;
-                gap: 6px;
+                padding: 3px;
+                gap: 3px;
             }
 
             .header {
-                min-height: 40px;
-                padding: 0 10px;
+                min-height: 32px;
+                padding: 0 6px;
             }
 
             .header h1 {
-                font-size: 0.85rem;
+                font-size: 0.75rem;
             }
 
             .header-actions .icon-btn span {
@@ -1428,38 +1126,39 @@
             }
 
             .header-actions .icon-btn {
-                padding: 6px;
+                padding: 3px;
             }
 
             .mode-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .mode-btn {
-                padding: 8px 2px;
-                font-size: 0.7rem;
+                padding: 5px 1px;
+                font-size: 0.55rem;
             }
 
             .mode-btn .icon {
-                font-size: 1.1rem;
+                font-size: 0.9rem;
             }
 
             .class-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .video-panel {
-                min-height: 40vh;
+                min-height: 30vh;
+                max-height: 40vh;
             }
 
             .control-btn {
-                min-width: 70px;
-                padding: 8px 10px;
-                font-size: 0.75rem;
+                min-width: 50px;
+                padding: 5px 6px;
+                font-size: 0.6rem;
             }
 
-            .video-controls {
-                gap: 6px;
+            .right-panel {
+                max-height: 150px;
             }
         }
 
@@ -1754,128 +1453,6 @@
     <div class="image-modal" id="imageModal">
         <button class="image-modal-close" type="button">&times;</button>
         <img id="modalImage" src="" alt="检测截图">
-    </div>
-
-    <!-- Mobile UI - Only visible on mobile -->
-    <div class="mobile-ui" id="mobileUi" style="display: none;">
-        <!-- Mobile Toolbar -->
-        <div class="mobile-toolbar">
-            <div class="mobile-toolbar-left">
-                <button class="mobile-btn" id="mobileSettingsBtn" title="设置">⚙️</button>
-                <button class="mobile-btn" id="mobileClassBtn" title="检测类别">🎯</button>
-            </div>
-            <div class="mobile-toolbar-right">
-                <button class="mobile-btn primary" id="mobileStartBtn" title="启动监控">▶️</button>
-                <button class="mobile-btn" id="mobileStopBtn" title="停止监控" style="display: none;">⏹️</button>
-            </div>
-        </div>
-
-        <!-- Mobile Overlay -->
-        <div class="mobile-overlay" id="mobileOverlay"></div>
-
-        <!-- Settings Popup -->
-        <div class="mobile-popup" id="settingsPopup">
-            <div class="mobile-popup-header">
-                <span class="mobile-popup-title">⚙️ 监控设置</span>
-                <button class="mobile-popup-close" onclick="closeMobilePopups()">&times;</button>
-            </div>
-
-            <!-- Quick Settings -->
-            <div class="mobile-quick-settings">
-                <div class="mobile-quick-item active" id="quickSound" onclick="toggleMobileQuick('sound')">
-                    <div class="icon">🔔</div>
-                    <div class="label">声音</div>
-                </div>
-                <div class="mobile-quick-item active" id="quickNotify" onclick="toggleMobileQuick('notify')">
-                    <div class="icon">📱</div>
-                    <div class="label">通知</div>
-                </div>
-                <div class="mobile-quick-item" id="quickMirror" onclick="toggleMobileQuick('mirror')">
-                    <div class="icon">🪞</div>
-                    <div class="label">镜像</div>
-                </div>
-                <div class="mobile-quick-item" id="quickFullscreen" onclick="toggleMobileFullscreen()">
-                    <div class="icon">🔲</div>
-                    <div class="label">全屏</div>
-                </div>
-            </div>
-
-            <!-- Detection Mode -->
-            <div class="mobile-setting-group">
-                <label class="mobile-setting-label">检测模式</label>
-                <div class="mobile-mode-selector">
-                    <button class="mobile-mode-btn active" data-mode="human" onclick="setMobileMode('human')">人体</button>
-                    <button class="mobile-mode-btn" data-mode="pet" onclick="setMobileMode('pet')">宠物</button>
-                    <button class="mobile-mode-btn" data-mode="all" onclick="setMobileMode('all')">全部</button>
-                </div>
-            </div>
-
-            <!-- Model Selection -->
-            <div class="mobile-setting-group">
-                <label class="mobile-setting-label">AI 模型</label>
-                <div class="mobile-model-selector">
-                    <button class="mobile-model-btn active" id="mobileModelCoco" onclick="setMobileModel('coco')">
-                        <span class="name">COCO-SSD</span>
-                        <span class="desc">轻量快速</span>
-                    </button>
-                    <button class="mobile-model-btn" id="mobileModelYolo" onclick="setMobileModel('yolo')">
-                        <span class="name">YOLOv8</span>
-                        <span class="desc">高精度</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Confidence Slider -->
-            <div class="mobile-setting-group">
-                <div class="mobile-slider-setting">
-                    <div class="mobile-slider-header">
-                        <span class="mobile-slider-label">置信度阈值</span>
-                        <span class="mobile-slider-value" id="mobileConfidenceValue">50%</span>
-                    </div>
-                    <input type="range" class="mobile-slider" id="mobileConfidence" min="10" max="95" value="50" oninput="updateMobileConfidence(this.value)">
-                </div>
-            </div>
-
-            <!-- Camera Selection -->
-            <div class="mobile-setting-group">
-                <label class="mobile-setting-label">摄像头</label>
-                <select id="mobileCameraSelect" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);"></select>
-            </div>
-        </div>
-
-        <!-- Class Selection Popup -->
-        <div class="mobile-popup" id="classPopup">
-            <div class="mobile-popup-header">
-                <span class="mobile-popup-title">🎯 选择检测类别</span>
-                <button class="mobile-popup-close" onclick="closeMobilePopups()">&times;</button>
-            </div>
-            <div class="mobile-class-grid" id="mobileClassGrid">
-                <button class="mobile-class-btn active" data-class="person" onclick="toggleMobileClass('person')">
-                    👤<span class="label">人体</span>
-                </button>
-                <button class="mobile-class-btn" data-class="cat" onclick="toggleMobileClass('cat')">
-                    🐱<span class="label">猫</span>
-                </button>
-                <button class="mobile-class-btn" data-class="dog" onclick="toggleMobileClass('dog')">
-                    🐕<span class="label">狗</span>
-                </button>
-                <button class="mobile-class-btn" data-class="bird" onclick="toggleMobileClass('bird')">
-                    🐦<span class="label">鸟</span>
-                </button>
-                <button class="mobile-class-btn" data-class="horse" onclick="toggleMobileClass('horse')">
-                    🐴<span class="label">马</span>
-                </button>
-                <button class="mobile-class-btn" data-class="cow" onclick="toggleMobileClass('cow')">
-                    🐄<span class="label">牛</span>
-                </button>
-                <button class="mobile-class-btn" data-class="sheep" onclick="toggleMobileClass('sheep')">
-                    🐑<span class="label">羊</span>
-                </button>
-                <button class="mobile-class-btn" data-class="elephant" onclick="toggleMobileClass('elephant')">
-                    🐘<span class="label">象</span>
-                </button>
-            </div>
-        </div>
     </div>
 
     <script src="models/tf.min.js"></script>
@@ -2768,189 +2345,12 @@
             }
         });
 
-        // ==================== 手机端 UI 功能 ====================
+        // ==================== 移动端触摸优化 ====================
         
         // 检测设备类型
         const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
         const isMobile = window.innerWidth <= 767;
         const isIPad = window.innerWidth >= 768 && window.innerWidth <= 1024;
-        
-        // 初始化手机端 UI
-        function initMobileUI() {
-            if (!isMobile) return;
-            
-            // 显示手机端 UI
-            document.getElementById('mobileUi').style.display = 'block';
-            
-            // 绑定工具栏按钮
-            document.getElementById('mobileSettingsBtn').addEventListener('click', () => {
-                openMobilePopup('settingsPopup');
-            });
-            
-            document.getElementById('mobileClassBtn').addEventListener('click', () => {
-                openMobilePopup('classPopup');
-            });
-            
-            document.getElementById('mobileStartBtn').addEventListener('click', () => {
-                startCamera();
-                document.getElementById('mobileStartBtn').style.display = 'none';
-                document.getElementById('mobileStopBtn').style.display = 'flex';
-            });
-            
-            document.getElementById('mobileStopBtn').addEventListener('click', () => {
-                stopCamera();
-                document.getElementById('mobileStartBtn').style.display = 'flex';
-                document.getElementById('mobileStopBtn').style.display = 'none';
-            });
-            
-            // 同步摄像头列表
-            const cameraSelect = document.getElementById('cameraSelect');
-            const mobileCameraSelect = document.getElementById('mobileCameraSelect');
-            if (cameraSelect && mobileCameraSelect) {
-                mobileCameraSelect.innerHTML = cameraSelect.innerHTML;
-                mobileCameraSelect.addEventListener('change', () => {
-                    cameraSelect.value = mobileCameraSelect.value;
-                });
-            }
-            
-            // 点击遮罩关闭弹窗
-            document.getElementById('mobileOverlay').addEventListener('click', closeMobilePopups);
-        }
-        
-        // 打开手机端弹窗
-        function openMobilePopup(popupId) {
-            closeMobilePopups();
-            document.getElementById(popupId).classList.add('active');
-            document.getElementById('mobileOverlay').classList.add('active');
-        }
-        
-        // 关闭所有手机端弹窗
-        function closeMobilePopups() {
-            document.querySelectorAll('.mobile-popup').forEach(popup => {
-                popup.classList.remove('active');
-            });
-            document.getElementById('mobileOverlay').classList.remove('active');
-        }
-        
-        // 快速设置切换
-        function toggleMobileQuick(type) {
-            const item = document.getElementById('quick' + type.charAt(0).toUpperCase() + type.slice(1));
-            if (!item) return;
-            
-            item.classList.toggle('active');
-            
-            switch(type) {
-                case 'sound':
-                    config.soundEnabled = item.classList.contains('active');
-                    document.getElementById('soundToggle')?.classList.toggle('active', config.soundEnabled);
-                    break;
-                case 'notify':
-                    config.notificationEnabled = item.classList.contains('active');
-                    document.getElementById('notificationToggle')?.classList.toggle('active', config.notificationEnabled);
-                    break;
-                case 'mirror':
-                    isMirrored = item.classList.contains('active');
-                    document.getElementById('video').style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
-                    break;
-            }
-        }
-        
-        // 手机端全屏
-        function toggleMobileFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
-            } else {
-                document.exitFullscreen?.() || document.webkitExitFullscreen?.();
-            }
-        }
-        
-        // 设置手机端检测模式
-        function setMobileMode(mode) {
-            // 更新按钮状态
-            document.querySelectorAll('.mobile-mode-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
-            });
-            
-            // 同步到桌面端
-            const modeBtn = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
-            if (modeBtn) modeBtn.click();
-            
-            // 更新类别选择
-            updateMobileClassesByMode(mode);
-        }
-        
-        // 根据模式更新类别
-        function updateMobileClassesByMode(mode) {
-            const classMap = {
-                'human': ['person'],
-                'pet': ['cat', 'dog', 'bird'],
-                'all': ['person', 'cat', 'dog', 'bird', 'horse', 'cow', 'sheep', 'elephant']
-            };
-            
-            const classes = classMap[mode] || ['person'];
-            document.querySelectorAll('.mobile-class-btn').forEach(btn => {
-                const isActive = classes.includes(btn.dataset.class);
-                btn.classList.toggle('active', isActive);
-            });
-            
-            // 同步到桌面端
-            selectedClasses = new Set(classes);
-            document.querySelectorAll('.class-btn').forEach(btn => {
-                btn.classList.toggle('active', classes.includes(btn.dataset.class));
-            });
-        }
-        
-        // 设置手机端模型
-        function setMobileModel(model) {
-            document.getElementById('mobileModelCoco').classList.toggle('active', model === 'coco');
-            document.getElementById('mobileModelYolo').classList.toggle('active', model === 'yolo');
-            
-            // 同步到桌面端
-            if (model === 'coco') {
-                switchToCoco();
-            } else {
-                switchToYOLO();
-            }
-        }
-        
-        // 更新手机端置信度
-        function updateMobileConfidence(value) {
-            document.getElementById('mobileConfidenceValue').textContent = value + '%';
-            config.confidenceThreshold = value / 100;
-            
-            // 同步到桌面端
-            const confidenceInput = document.getElementById('confidence');
-            if (confidenceInput) {
-                confidenceInput.value = value;
-                document.getElementById('confidenceValue').textContent = value;
-            }
-        }
-        
-        // 切换手机端类别
-        function toggleMobileClass(className) {
-            const btn = document.querySelector(`.mobile-class-btn[data-class="${className}"]`);
-            if (!btn) return;
-            
-            btn.classList.toggle('active');
-            
-            // 更新选中集合
-            if (btn.classList.contains('active')) {
-                selectedClasses.add(className);
-            } else {
-                selectedClasses.delete(className);
-            }
-            
-            // 同步到桌面端
-            const desktopBtn = document.querySelector(`.class-btn[data-class="${className}"]`);
-            if (desktopBtn) {
-                desktopBtn.classList.toggle('active', btn.classList.contains('active'));
-            }
-        }
-        
-        // 初始化
-        initMobileUI();
-        
-        // ==================== 移动端触摸优化 ====================
         
         // 触摸手势支持
         let touchStartY = 0;
