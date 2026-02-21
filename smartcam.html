@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCam - 智能目标检测系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-card: #161b22;
+            --color-primary: #f0883e;
+            --color-accent: #58a6ff;
+            --color-human: #00d4aa;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --color-success: #3fb950;
+            --color-warning: #f85149;
+            --border-color: #30363d;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 280px;
+            grid-template-rows: 50px 1fr;
+            height: 100vh;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1 svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        /* Left Panel - Controls */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-title svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Model Status */
+        .model-status-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-warning);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.loaded {
+            background: var(--color-success);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--bg-primary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            transition: width 0.3s;
+        }
+
+        /* Mode Selector */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .mode-btn {
+            padding: 8px 4px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn .icon {
+            font-size: 1.2rem;
+        }
+
+        .mode-btn:hover, .mode-btn.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        /* Class Selector */
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .class-btn {
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .class-btn:hover, .class-btn.active {
+            background: var(--color-accent);
+            color: white;
+            border-color: var(--color-accent);
+        }
+
+        /* Settings */
+        .setting-item {
+            margin-bottom: 10px;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        input[type="range"] {
+            padding: 0;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-primary);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .range-value {
+            font-size: 0.75rem;
+            color: var(--color-primary);
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        /* Toggle */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .toggle-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .toggle-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle {
+            width: 36px;
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle.active {
+            background: var(--color-success);
+        }
+
+        .toggle.active::after {
+            transform: translateX(16px);
+        }
+
+        /* Model Toggle */
+        .model-toggle-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .model-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+
+        .model-btn:hover {
+            border-color: var(--color-accent);
+        }
+
+        .model-btn.active {
+            border-color: var(--color-success);
+            background: rgba(63, 185, 80, 0.1);
+        }
+
+        .model-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .model-status {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .model-btn.active .model-status {
+            color: var(--color-success);
+        }
+
+        .model-info {
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+        }
+
+        .model-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.4;
+        }
+
+        .badge {
+            background: var(--color-success);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        .badge.high {
+            background: var(--color-primary);
+        }
+
+        /* Center - Video */
+        .video-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #video, #canvas {
+            position: absolute;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .permission-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 17, 23, 0.9);
+            gap: 16px;
+        }
+
+        .permission-overlay.hidden {
+            display: none;
+        }
+
+        .permission-overlay svg {
+            width: 48px;
+            height: 48px;
+            color: var(--color-primary);
+        }
+
+        .permission-overlay p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            padding: 10px 24px;
+            background: var(--color-primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #ff9d5c;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Video Overlay */
+        .video-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .overlay-badge {
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .overlay-badge.detecting .dot {
+            background: var(--color-success);
+            animation: pulse 1s infinite;
+        }
+
+        .overlay-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .stats-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .stat-badge {
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .stat-badge .value {
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .alert-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--color-warning);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .alert-banner.active {
+            opacity: 1;
+        }
+
+        /* Video Controls */
+        .video-controls {
+            padding: 10px 16px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: var(--color-accent);
+            color: white;
+            border-color: var(--color-accent);
+        }
+
+        .control-btn.danger:hover {
+            background: var(--color-warning);
+            border-color: var(--color-warning);
+        }
+
+        /* Right Panel - Records */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .records-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .records-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .records-title svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .clear-btn {
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .clear-btn:hover {
+            background: var(--color-warning);
+            color: white;
+            border-color: var(--color-warning);
+        }
+
+        .records-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .record-item {
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .record-item:hover {
+            border-color: var(--color-primary);
+            transform: translateX(2px);
+        }
+
+        .record-thumbnail {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+            background: var(--bg-card);
+        }
+
+        .record-time {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-info {
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+
+        .record-download {
+            color: var(--color-accent);
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+
+        .record-download:hover {
+            text-decoration: underline;
+        }
+
+        /* Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                SmartCam 智能监控
+            </h1>
+            <div class="header-actions">
+                <button class="icon-btn" id="mirrorBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.62-.31-1.37-.31-1.99 0l-4.55 2.26c-.73.36-1.19 1.1-1.19 1.91v4.62c0 .81.46 1.55 1.19 1.91l4.55 2.26c.31.16.65.24.99.24s.68-.08.99-.24l4.54-2.26c.73-.36 1.19-1.1 1.19-1.91v-4.62c0-.81-.46-1.55-1.19-1.91z"/></svg>
+                    镜像
+                </button>
+                <button class="icon-btn" id="fullscreenBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                    全屏
+                </button>
+            </div>
+        </header>
+
+        <!-- Left Panel - Controls -->
+        <div class="left-panel">
+            <!-- Model Status -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    模型状态
+                </div>
+                <div class="model-status-compact">
+                    <div class="status-dot" id="modelStatusDot"></div>
+                    <span id="modelStatusText">加载中...</span>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="modelProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detection Mode -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    检测模式
+                </div>
+                <div class="mode-grid" id="modeSelector">
+                    <button class="mode-btn active" data-mode="human">
+                        <span class="icon">👤</span>
+                        <span>人体</span>
+                    </button>
+                    <button class="mode-btn" data-mode="pet">
+                        <span class="icon">🐱</span>
+                        <span>宠物</span>
+                    </button>
+                    <button class="mode-btn" data-mode="all">
+                        <span class="icon">🎯</span>
+                        <span>全部</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+                    AI 模型
+                </div>
+                <div class="model-toggle-row">
+                    <button class="model-btn active" id="modelCocoBtn" onclick="switchToCoco()">
+                        <span class="model-name">COCO-SSD</span>
+                        <span class="model-status">使用中</span>
+                    </button>
+                    <button class="model-btn" id="modelYoloBtn" onclick="switchToYOLO()">
+                        <span class="model-name">YOLOv8</span>
+                        <span class="model-status">点击切换</span>
+                    </button>
+                </div>
+                <div class="model-info">
+                    <div class="model-desc" id="cocoDesc">
+                        <span class="badge">轻量</span>
+                        <span>内存占用低，运行稳定，推荐日常使用</span>
+                    </div>
+                    <div class="model-desc" id="yoloDesc" style="display:none;">
+                        <span class="badge high">智能高精度</span>
+                        <span>COCO快速筛选+YOLO确认，平衡精度与内存</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Selection -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l-5.5 9h11z M17.5 9l-5.5 9 5.5-9z M6.5 9h11l-5.5-9-5.5 9z M12 11l-5.5 9h11l-5.5-9z"/></svg>
+                    检测类别
+                </div>
+                <div class="class-grid" id="classSelector">
+                    <button class="class-btn active" data-class="person">👤 人体</button>
+                    <button class="class-btn" data-class="cat">🐱 猫</button>
+                    <button class="class-btn" data-class="dog">🐕 狗</button>
+                    <button class="class-btn" data-class="bird">🐦 鸟</button>
+                    <button class="class-btn" data-class="horse">🐴 马</button>
+                    <button class="class-btn" data-class="cow">🐄 牛</button>
+                    <button class="class-btn" data-class="sheep">🐑 羊</button>
+                    <button class="class-btn" data-class="elephant">🐘 象</button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.04 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    监控设置
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">选择摄像头</label>
+                    <select id="cameraSelect"></select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">置信度阈值</label>
+                    <input type="range" id="confidence" min="10" max="95" value="50">
+                    <div class="range-value"><span id="confidenceValue">50</span>%</div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                    报警设置
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">声音报警</span>
+                    <div class="toggle active" id="soundToggle"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">浏览器通知</span>
+                    <div class="toggle active" id="notificationToggle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center - Video -->
+        <div class="video-panel">
+            <div class="video-container" id="videoContainer">
+                <video id="video" playsinline muted></video>
+                <canvas id="canvas"></canvas>
+                
+                <div class="permission-overlay" id="permissionPrompt">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                    </svg>
+                    <p>点击下方按钮启动监控</p>
+                    <button class="btn-primary" id="startCamera" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        启动监控
+                    </button>
+                </div>
+
+                <div class="video-overlay">
+                    <div class="overlay-badge" id="statusBadge">
+                        <div class="dot"></div>
+                        <span id="statusText">等待启动</span>
+                    </div>
+                    <div class="stats-group">
+                        <div class="stat-badge">
+                            <div class="value" id="detectionCount">0</div>
+                            <div>目标</div>
+                        </div>
+                        <div class="stat-badge">
+                            <div class="value" id="fpsValue">0</div>
+                            <div>FPS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-banner" id="alertBanner">⚠️ 检测到目标!</div>
+            </div>
+            
+            <div class="video-controls">
+                <button class="control-btn" id="snapshotBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M9.4 10.5l4.77-8.26C13.47 2.09 12.75 2 12 2c-2.4 0-4.6.85-6.32 2.25l3.66 6.35.06-.1zM21.54 9c-.93 0-1.81.19-2.62.54l-3.38 5.86 3.66 6.35c1.72-1.4 2.84-3.56 2.84-6.25 0-3.13-1.89-5.81-4.5-6.5zM12 22c1.85 0 3.55-.63 4.9-1.69l-3.67-6.36L8.1 21.31C9.26 21.77 10.6 22 12 22zM3.46 9c-.93 0-1.81.19-2.62.54l3.38 5.86-3.66 6.35C.28 19.69 0 17.41 0 15c0-3.13 1.89-5.81 4.5-6.5z"/></svg>
+                    截图
+                </button>
+                <button class="control-btn danger" id="stopCamera">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M6 6h12v12H6z"/></svg>
+                    停止监控
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Panel - Records -->
+        <div class="right-panel">
+            <div class="records-header">
+                <div class="records-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+                    检测记录
+                </div>
+                <button class="clear-btn" id="clearRecords">清空</button>
+            </div>
+            <div class="records-list" id="recordsList">
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+                    <p>暂无检测记录</p>
+                    <p style="font-size: 0.75rem; margin-top: 4px;">检测到目标时将自动保存</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="image-modal" id="imageModal">
+        <button class="image-modal-close" type="button">&times;</button>
+        <img id="modalImage" src="" alt="检测截图">
+    </div>
+
+    <script src="models/tf.min.js"></script>
+    <script src="models/coco-ssd.min.js"></script>
+    <script src="models/ort.min.js"></script>
+    <script>
+        const CLASS_NAMES = {
+            'person': '人体', 'cat': '猫', 'dog': '狗', 'bird': '鸟',
+            'horse': '马', 'cow': '牛', 'sheep': '羊', 'elephant': '象'
+        };
+
+        let model = null;
+        let mediaStream = null;
+        let isDetecting = false;
+        let isMirrored = false;
+        let detectionRecords = [];
+        let selectedClasses = new Set(['person']);
+        let currentMode = 'human';
+        
+        const config = {
+            confidenceThreshold: 0.5,
+            soundEnabled: true,
+            notificationEnabled: true
+        };
+
+        // YOLOv8 类别定义 (80类COCO数据集)
+        const YOLO_CLASSES = [
+            'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+            'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+            'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+            'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
+            'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+            'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+            'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+            'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
+            'hair drier', 'toothbrush'
+        ];
+
+        let yoloSession = null;
+        let useYOLO = false;
+        
+        // 手动加载YOLO模型（如果需要更高精度）
+        async function loadYOLO() {
+            if (yoloSession) {
+                useYOLO = true;
+                alert('YOLO已加载');
+                return;
+            }
+            try {
+                const modelUrl = 'models/yolov8n.onnx';
+                const response = await fetch(modelUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                yoloSession = await ort.InferenceSession.create(arrayBuffer, {
+                    executionProviders: ['webgl'],
+                    graphOptimizationLevel: 'all'
+                });
+                useYOLO = true;
+                document.getElementById('modelStatusText').textContent = 'YOLOv8已加载';
+                alert('YOLO模型加载成功！检测精度将提升');
+            } catch (e) {
+                alert('YOLO加载失败: ' + e.message);
+            }
+        }
+        
+        window.loadYOLO = loadYOLO;
+        
+        // 切换到COCO-SSD模型
+        function switchToCoco() {
+            useYOLO = false;
+            
+            // 释放YOLO资源以节省内存
+            if (yoloSession) {
+                // 注意：ONNX Runtime Web没有显式的释放方法
+                // 但我们可以清理缓冲区
+                yoloFloatBuffer = null;
+                console.log('已释放YOLO缓冲区');
+            }
+            
+            document.getElementById('modelCocoBtn').classList.add('active');
+            document.getElementById('modelCocoBtn').querySelector('.model-status').textContent = '使用中';
+            document.getElementById('modelYoloBtn').classList.remove('active');
+            document.getElementById('modelYoloBtn').querySelector('.model-status').textContent = '点击切换';
+            document.getElementById('cocoDesc').style.display = 'flex';
+            document.getElementById('yoloDesc').style.display = 'none';
+            document.getElementById('modelStatusText').textContent = 'COCO-SSD就绪';
+            
+            // 强制垃圾回收（如果可用）
+            if (window.gc) {
+                window.gc();
+            }
+        }
+        
+        // 切换到YOLOv8模型
+        async function switchToYOLO() {
+            if (yoloSession) {
+                useYOLO = true;
+                document.getElementById('modelYoloBtn').classList.add('active');
+                document.getElementById('modelYoloBtn').querySelector('.model-status').textContent = '使用中';
+                document.getElementById('modelCocoBtn').classList.remove('active');
+                document.getElementById('modelCocoBtn').querySelector('.model-status').textContent = '点击切换';
+                document.getElementById('cocoDesc').style.display = 'none';
+                document.getElementById('yoloDesc').style.display = 'flex';
+                document.getElementById('modelStatusText').textContent = 'YOLOv8就绪';
+            } else {
+                const btn = document.getElementById('modelYoloBtn');
+                btn.querySelector('.model-status').textContent = '加载中...';
+                try {
+                    const modelUrl = 'models/yolov8n.onnx';
+                    // 先fetch模型文件为ArrayBuffer，这样更可靠
+                    console.log('开始加载模型文件...');
+                    const response = await fetch(modelUrl);
+                    if (!response.ok) throw new Error('模型文件加载失败: ' + response.status);
+                    const arrayBuffer = await response.arrayBuffer();
+                    console.log('模型文件大小:', arrayBuffer.byteLength, 'bytes');
+                    
+                    // 使用WebGL模式（更兼容）
+                    yoloSession = await ort.InferenceSession.create(arrayBuffer, {
+                        executionProviders: ['webgl'],
+                        graphOptimizationLevel: 'all'
+                    });
+                    console.log('YOLO会话创建成功');
+                    useYOLO = true;
+                    document.getElementById('modelYoloBtn').classList.add('active');
+                    document.getElementById('modelYoloBtn').querySelector('.model-status').textContent = '使用中';
+                    document.getElementById('modelCocoBtn').classList.remove('active');
+                    document.getElementById('modelCocoBtn').querySelector('.model-status').textContent = '点击切换';
+                    document.getElementById('cocoDesc').style.display = 'none';
+                    document.getElementById('yoloDesc').style.display = 'flex';
+                    document.getElementById('modelStatusText').textContent = 'YOLOv8就绪';
+                } catch (e) {
+                    console.error('YOLO加载详细错误:', e);
+                    btn.querySelector('.model-status').textContent = '加载失败';
+                    alert('YOLO模型加载失败！\n\n错误: ' + e.message + '\n\n请按F12打开浏览器控制台查看详细信息');
+                }
+            }
+        }
+        
+        window.switchToCoco = switchToCoco;
+        window.switchToYOLO = switchToYOLO;
+        
+        // 内存优化配置
+        const MEMORY_CONFIG = {
+            cocoFrameSkip: 3,          // COCO-SSD每3帧检测一次
+            yoloFrameSkip: 10,         // YOLO每10帧检测一次（大幅降低频率）
+            maxRecords: 5,             // 最多保存5条记录（减少内存）
+            screenshotQuality: 0.85,   // 截图质量0.85
+            maxScreenshotWidth: 1280,  // 截图最大宽度1280
+            detectionInterval: 5000,   // 同类型检测最小间隔5秒
+            cleanupInterval: 10000     // 每10秒清理一次内存（更频繁）
+        };
+        
+        // YOLO预处理缓冲区（避免重复分配）
+        let yoloFloatBuffer = null;
+        let yoloInputSize = 320;
+        
+        // 智能模式：当COCO-SSD检测到目标时才用YOLO确认
+        let smartMode = false;
+        let yoloConfirmCounter = 0;
+        
+        let lastDetectionTime = 0;
+        let frameCounter = 0;
+
+        async function loadModel() {
+            const progressBar = document.getElementById('modelProgress');
+            const statusText = document.getElementById('modelStatusText');
+            const statusDot = document.getElementById('modelStatusDot');
+            const startBtn = document.getElementById('startCamera');
+
+            try {
+                progressBar.style.width = '20%';
+                statusText.textContent = '加载COCO-SSD...';
+                
+                // 先加载COCO-SSD作为备用
+                await tf.ready();
+                model = await cocoSsd.load({ base: 'mobilenet_v2' });
+                progressBar.style.width = '50%';
+                
+                // 尝试加载YOLOv8（可选，默认禁用以节省内存）
+                // 如需启用YOLO，请在浏览器控制台执行: loadYOLO()
+                statusText.textContent = 'COCO-SSD就绪';
+                useYOLO = false;
+                
+                progressBar.style.width = '100%';
+                statusDot.classList.add('loaded');
+                startBtn.disabled = false;
+            } catch (error) {
+                console.error('模型加载失败:', error);
+                statusText.textContent = '加载失败';
+            }
+        }
+
+        // YOLOv8预处理函数 - 超低内存版 (320x320)
+        function preprocessYOLO(imageData, canvas, ctx, inputSize = 320) {
+            const width = imageData.videoWidth || imageData.width || 640;
+            const height = imageData.videoHeight || imageData.height || 480;
+            
+            // 计算缩放比例，保持宽高比
+            const scale = Math.min(inputSize / width, inputSize / height);
+            const newWidth = Math.floor(width * scale);
+            const newHeight = Math.floor(height * scale);
+            const x = Math.floor((inputSize - newWidth) / 2);
+            const y = Math.floor((inputSize - newHeight) / 2);
+            
+            // 填充灰色背景并绘制图像
+            ctx.fillStyle = '#808080';
+            ctx.fillRect(0, 0, inputSize, inputSize);
+            ctx.drawImage(imageData, x, y, newWidth, newHeight);
+            
+            // 转换为tensor
+            const imageData2D = ctx.getImageData(0, 0, inputSize, inputSize);
+            const data = imageData2D.data;
+            
+            // 使用预分配的缓冲区（避免每次都创建新数组）
+            const bufferSize = inputSize * inputSize * 3;
+            if (!yoloFloatBuffer || yoloFloatBuffer.length !== bufferSize) {
+                yoloFloatBuffer = new Float32Array(bufferSize);
+            }
+            
+            // RGB归一化 - CHW格式 (Channel, Height, Width)
+            const channelSize = inputSize * inputSize;
+            for (let i = 0; i < channelSize; i++) {
+                yoloFloatBuffer[i] = data[i * 4] / 255;                        // R
+                yoloFloatBuffer[channelSize + i] = data[i * 4 + 1] / 255;     // G
+                yoloFloatBuffer[2 * channelSize + i] = data[i * 4 + 2] / 255; // B
+            }
+            
+            // 创建tensor时复制数据（避免共享内存问题）
+            return {
+                tensor: new ort.Tensor('float32', yoloFloatBuffer.slice(), [1, 3, inputSize, inputSize]),
+                scale: scale,
+                padding: { x, y }
+            };
+        }
+
+        // YOLOv8后处理函数 - 修复版
+        function postprocessYOLO(output, confidenceThreshold, imgWidth, imgHeight, scale, padding) {
+            const predictions = [];
+            const data = output.data;
+            const dims = output.dims;
+            
+            // YOLOv8输出格式: [1, 84, 8400]
+            // 84 = 4 (bbox) + 80 (classes)
+            // 8400 = numAnchors
+            const numAnchors = dims[2];
+            const numClasses = 80;
+            
+            for (let i = 0; i < numAnchors; i++) {
+                // 获取边界框坐标 (前4行)
+                const cx = data[i];
+                const cy = data[numAnchors + i];
+                const w = data[2 * numAnchors + i];
+                const h = data[3 * numAnchors + i];
+                
+                // 找到最大类别分数 (后80行)
+                let maxScore = 0;
+                let maxClass = 0;
+                
+                for (let c = 0; c < numClasses; c++) {
+                    const score = data[(4 + c) * numAnchors + i];
+                    if (score > maxScore) {
+                        maxScore = score;
+                        maxClass = c;
+                    }
+                }
+                
+                // YOLOv8输出已经是类别分数，不需要乘以objectness
+                if (maxScore > confidenceThreshold) {
+                    // 转换回原始图像坐标
+                    const x1 = (cx - w / 2 - padding.x) / scale;
+                    const y1 = (cy - h / 2 - padding.y) / scale;
+                    const x2 = (cx + w / 2 - padding.x) / scale;
+                    const y2 = (cy + h / 2 - padding.y) / scale;
+                    
+                    // 确保坐标在图像范围内
+                    const finalX = Math.max(0, Math.min(imgWidth, x1));
+                    const finalY = Math.max(0, Math.min(imgHeight, y1));
+                    const finalW = Math.max(0, Math.min(imgWidth - finalX, x2 - x1));
+                    const finalH = Math.max(0, Math.min(imgHeight - finalY, y2 - y1));
+                    
+                    if (finalW > 0 && finalH > 0) {
+                        predictions.push({
+                            class: YOLO_CLASSES[maxClass],
+                            score: maxScore,
+                            bbox: [finalX, finalY, finalW, finalH]
+                        });
+                    }
+                }
+            }
+            
+            // NMS (非极大值抑制)
+            return nms(predictions, 0.45);
+        }
+
+        // NMS实现
+        function nms(predictions, iouThreshold) {
+            predictions.sort((a, b) => b.score - a.score);
+            const selected = [];
+            
+            while (predictions.length > 0) {
+                const current = predictions.shift();
+                selected.push(current);
+                
+                predictions = predictions.filter(p => {
+                    const iou = calculateIoU(current.bbox, p.bbox);
+                    return iou < iouThreshold;
+                });
+            }
+            
+            return selected;
+        }
+
+        function calculateIoU(box1, box2) {
+            const [x1, y1, w1, h1] = box1;
+            const [x2, y2, w2, h2] = box2;
+            
+            const xi1 = Math.max(x1, x2);
+            const yi1 = Math.max(y1, y2);
+            const xi2 = Math.min(x1 + w1, x2 + w2);
+            const yi2 = Math.min(y1 + h1, y2 + h2);
+            
+            const interArea = Math.max(0, xi2 - xi1) * Math.max(0, yi2 - yi1);
+            const box1Area = w1 * h1;
+            const box2Area = w2 * h2;
+            
+            return interArea / (box1Area + box2Area - interArea);
+        }
+
+        async function loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput');
+                const select = document.getElementById('cameraSelect');
+                select.innerHTML = '';
+                cameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.deviceId;
+                    option.textContent = camera.label || `摄像头 ${index + 1}`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error('获取摄像头失败:', err);
+            }
+        }
+
+        async function startCamera() {
+            try {
+                const deviceId = document.getElementById('cameraSelect').value;
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('video');
+                video.srcObject = mediaStream;
+                await video.play();
+
+                document.getElementById('permissionPrompt').classList.add('hidden');
+                
+                // 等待摄像头曝光稳定（约2秒）
+                updateStatus('曝光调节中...', false);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                updateStatus('监控中', false);
+                startDetection();
+            } catch (err) {
+                console.error('启动失败:', err);
+                alert('无法访问摄像头，请检查权限设置');
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            isDetecting = false;
+            document.getElementById('video').srcObject = null;
+            document.getElementById('permissionPrompt').classList.remove('hidden');
+            updateStatus('已停止', false);
+            document.getElementById('alertBanner').classList.remove('active');
+            
+            // 停止内存清理
+            stopMemoryCleanup();
+            
+            // 清理检测记录以释放内存
+            detectionRecords.forEach(record => {
+                record.image = null;
+            });
+            detectionRecords = [];
+            updateRecordsList();
+        }
+
+        function updateStatus(text, detecting) {
+            document.getElementById('statusText').textContent = text;
+            const badge = document.getElementById('statusBadge');
+            badge.classList.toggle('detecting', detecting);
+        }
+
+        async function startDetection() {
+            if (isDetecting) return;
+            isDetecting = true;
+
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            let lastFpsUpdate = performance.now();
+            let fpsFrameCount = 0;
+            frameCounter = 0;
+            
+            // 等待视频准备好后再设置canvas尺寸
+            if (video.videoWidth > 0) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }
+            
+            // 重用一个预处理canvas - YOLO使用320x320
+            const preprocCanvas = document.createElement('canvas');
+            preprocCanvas.width = 320;
+            preprocCanvas.height = 320;
+            const preprocCtx = preprocCanvas.getContext('2d', { willReadFrequently: true });
+
+            async function detect() {
+                if (!isDetecting) return;
+
+                // 确保canvas尺寸正确
+                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                }
+
+                ctx.drawImage(video, 0, 0);
+
+                // 每帧都增加FPS计数
+                fpsFrameCount++;
+                const now = performance.now();
+                if (now - lastFpsUpdate >= 1000) {
+                    document.getElementById('fpsValue').textContent = fpsFrameCount;
+                    fpsFrameCount = 0;
+                    lastFpsUpdate = now;
+                }
+
+                // 帧跳过优化：根据模型类型使用不同的跳过频率
+                frameCounter++;
+                const currentFrameSkip = useYOLO ? MEMORY_CONFIG.yoloFrameSkip : MEMORY_CONFIG.cocoFrameSkip;
+                if (frameCounter % currentFrameSkip !== 0) {
+                    requestAnimationFrame(detect);
+                    return;
+                }
+
+                try {
+                    let predictions = [];
+                    
+                    if (useYOLO && yoloSession) {
+                        // 智能YOLO模式：先用COCO-SSD快速检测，有目标才用YOLO确认
+                        yoloConfirmCounter++;
+                        
+                        // 每3次YOLO检测中，2次用COCO-SSD，1次用YOLO
+                        if (yoloConfirmCounter % 3 !== 0) {
+                            // 使用COCO-SSD快速检测
+                            predictions = await model.detect(video);
+                            
+                            // 如果COCO-SSD检测到目标，下次用YOLO确认
+                            const cocoDetections = predictions.filter(p => 
+                                selectedClasses.has(p.class) && p.score >= config.confidenceThreshold * 0.8
+                            );
+                            
+                            if (cocoDetections.length > 0) {
+                                // 标记下次使用YOLO
+                                yoloConfirmCounter = 2; // 确保下次用YOLO
+                            }
+                        } else {
+                            // 使用YOLOv8进行高精度检测
+                            const { tensor, scale, padding } = preprocessYOLO(video, preprocCanvas, preprocCtx);
+                            const feeds = {};
+                            feeds[yoloSession.inputNames[0]] = tensor;
+                            const results = await yoloSession.run(feeds);
+                            const output = results[yoloSession.outputNames[0]];
+                            
+                            predictions = postprocessYOLO(
+                                output, 
+                                config.confidenceThreshold,
+                                video.videoWidth || 640,
+                                video.videoHeight || 480,
+                                scale,
+                                padding
+                            );
+                        }
+                    } else {
+                        // 使用COCO-SSD进行检测
+                        predictions = await model.detect(video);
+                    }
+                    
+                    const filtered = predictions.filter(p => 
+                        selectedClasses.has(p.class) && p.score >= config.confidenceThreshold
+                    );
+
+                    let detectionCount = 0;
+                    filtered.forEach(p => {
+                        detectionCount++;
+                        const [x, y, w, h] = p.bbox;
+                        ctx.strokeStyle = '#f0883e';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(x, y, w, h);
+                        
+                        const label = `${CLASS_NAMES[p.class] || p.class} ${(p.score * 100).toFixed(0)}%`;
+                        ctx.fillStyle = '#f0883e';
+                        ctx.fillRect(x, y - 20, ctx.measureText(label).width + 16, 20);
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px sans-serif';
+                        ctx.fillText(label, x + 8, y - 6);
+                    });
+
+                    document.getElementById('detectionCount').textContent = detectionCount;
+
+                    if (detectionCount > 0) {
+                        updateStatus('检测中', true);
+                        document.getElementById('alertBanner').classList.add('active');
+                        handleDetection(detectionCount);
+                    } else {
+                        updateStatus('监控中', false);
+                        document.getElementById('alertBanner').classList.remove('active');
+                    }
+                } catch (e) {
+                    console.error('检测错误:', e);
+                }
+
+                requestAnimationFrame(detect);
+            }
+
+            detect();
+            
+            // 启动定期内存清理
+            startMemoryCleanup();
+        }
+
+        let alertCooldown = false;
+        function handleDetection(count) {
+            if (alertCooldown) return;
+            alertCooldown = true;
+
+            if (config.soundEnabled) playAlertSound();
+            if (config.notificationEnabled) showNotification();
+            addRecord(count);
+
+            setTimeout(() => alertCooldown = false, 3000);
+        }
+
+        function playAlertSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.error('声音播放失败:', e);
+            }
+        }
+
+        function showNotification() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('SmartCam 监控提醒', {
+                    body: '检测到目标！',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23f0883e" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>'
+                });
+            }
+        }
+
+        // 静态缩略图画布，避免重复创建
+        let snapshotCanvas = null;
+        let snapshotCtx = null;
+        
+        function captureSnapshot() {
+            const canvas = document.getElementById('canvas');
+            
+            // 确保canvas有有效尺寸
+            if (canvas.width <= 0 || canvas.height <= 0) {
+                console.warn('Canvas尺寸无效');
+                return null;
+            }
+            
+            // 初始化静态画布
+            if (!snapshotCanvas) {
+                snapshotCanvas = document.createElement('canvas');
+                snapshotCtx = snapshotCanvas.getContext('2d', { willReadFrequently: true });
+            }
+            
+            // 计算缩略图尺寸
+            const scale = Math.min(1, MEMORY_CONFIG.maxScreenshotWidth / canvas.width);
+            const targetWidth = Math.floor(canvas.width * scale);
+            const targetHeight = Math.floor(canvas.height * scale);
+            
+            // 只在尺寸变化时重新设置
+            if (snapshotCanvas.width !== targetWidth || snapshotCanvas.height !== targetHeight) {
+                snapshotCanvas.width = targetWidth;
+                snapshotCanvas.height = targetHeight;
+            }
+            
+            // 清除之前的内容并绘制新图像
+            snapshotCtx.clearRect(0, 0, targetWidth, targetHeight);
+            snapshotCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+            
+            return snapshotCanvas.toDataURL('image/jpeg', MEMORY_CONFIG.screenshotQuality);
+        }
+
+        function addRecord(count) {
+            const now = Date.now();
+            
+            // 检测间隔限制：避免短时间内重复记录
+            if (now - lastDetectionTime < MEMORY_CONFIG.detectionInterval) {
+                return;
+            }
+            lastDetectionTime = now;
+            
+            const imageData = captureSnapshot();
+            if (!imageData) {
+                console.warn('截图失败，跳过记录');
+                return;
+            }
+            
+            const record = { 
+                timestamp: now, 
+                count, 
+                image: imageData 
+            };
+            detectionRecords.unshift(record);
+            
+            // 限制记录数量，超出时清理旧记录
+            while (detectionRecords.length > MEMORY_CONFIG.maxRecords) {
+                const oldRecord = detectionRecords.pop();
+                oldRecord.image = null;
+            }
+            
+            updateRecordsList();
+        }
+        
+        // 内存清理函数
+        let cleanupTimer = null;
+        let yoloMemoryWarning = false;
+        
+        function startMemoryCleanup() {
+            if (cleanupTimer) clearInterval(cleanupTimer);
+            
+            cleanupTimer = setInterval(() => {
+                // 强制垃圾回收提示（如果可用）
+                if (window.gc) {
+                    window.gc();
+                }
+                
+                // 清理超出限制的记录
+                while (detectionRecords.length > MEMORY_CONFIG.maxRecords) {
+                    const oldRecord = detectionRecords.pop();
+                    if (oldRecord) oldRecord.image = null;
+                }
+                
+                // 如果使用YOLO，定期检查内存并警告
+                if (useYOLO && performance.memory) {
+                    const usedMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+                    const limitMB = Math.round(performance.memory.jsHeapSizeLimit / 1048576);
+                    const usagePercent = Math.round((usedMB / limitMB) * 100);
+                    
+                    if (usagePercent > 80 && !yoloMemoryWarning) {
+                        yoloMemoryWarning = true;
+                        console.warn('内存使用过高:', usedMB + 'MB / ' + limitMB + 'MB (' + usagePercent + '%)');
+                        console.warn('建议切换到COCO-SSD模型以降低内存占用');
+                    } else if (usagePercent < 60) {
+                        yoloMemoryWarning = false;
+                    }
+                }
+            }, MEMORY_CONFIG.cleanupInterval);
+        }
+        
+        function stopMemoryCleanup() {
+            if (cleanupTimer) {
+                clearInterval(cleanupTimer);
+                cleanupTimer = null;
+            }
+            // 清理YOLO缓冲区
+            yoloFloatBuffer = null;
+        }
+
+        function updateRecordsList() {
+            const list = document.getElementById('recordsList');
+            if (detectionRecords.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+                        <p>暂无检测记录</p>
+                        <p style="font-size: 0.75rem; margin-top: 4px;">检测到目标时将自动保存截图</p>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = detectionRecords.map((r, index) => `
+                <div class="record-item" onclick="showImageModal('${r.image}')">
+                    <img class="record-thumbnail" src="${r.image}" alt="检测截图">
+                    <div class="record-time">
+                        <span>${new Date(r.timestamp).toLocaleTimeString()}</span>
+                        <span class="record-download" onclick="event.stopPropagation(); downloadImage('${r.image}', ${r.timestamp})">下载</span>
+                    </div>
+                    <div class="record-info">检测到 ${r.count} 个目标</div>
+                </div>
+            `).join('');
+        }
+
+        function showImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('modalImage');
+            img.src = imageSrc;
+            modal.classList.add('active');
+        }
+
+        function downloadImage(imageData, timestamp) {
+            const link = document.createElement('a');
+            link.download = `detection_${timestamp}.jpg`;
+            link.href = imageData;
+            link.click();
+        }
+
+        function updateDetectionMode(mode) {
+            currentMode = mode;
+            selectedClasses.clear();
+            
+            if (mode === 'human') {
+                // 人体模式：只检测人体
+                selectedClasses.add('person');
+            } else if (mode === 'pet') {
+                // 宠物模式：只检测猫、狗、鸟
+                selectedClasses.add('cat');
+                selectedClasses.add('dog');
+                selectedClasses.add('bird');
+            } else if (mode === 'all') {
+                // 全部模式：启用所有类别
+                selectedClasses.add('person');
+                selectedClasses.add('cat');
+                selectedClasses.add('dog');
+                selectedClasses.add('bird');
+                selectedClasses.add('horse');
+                selectedClasses.add('cow');
+                selectedClasses.add('sheep');
+                selectedClasses.add('elephant');
+            }
+
+            // 更新类别按钮状态
+            document.querySelectorAll('.class-btn').forEach(btn => {
+                btn.classList.toggle('active', selectedClasses.has(btn.dataset.class));
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('startCamera').addEventListener('click', startCamera);
+        document.getElementById('stopCamera').addEventListener('click', stopCamera);
+        document.getElementById('snapshotBtn').addEventListener('click', () => {
+            const canvas = document.getElementById('canvas');
+            const link = document.createElement('a');
+            link.download = `snapshot_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        document.getElementById('mirrorBtn').addEventListener('click', () => {
+            isMirrored = !isMirrored;
+            document.getElementById('video').style.transform = isMirrored ? 'scaleX(-1)' : '';
+            document.getElementById('canvas').style.transform = isMirrored ? 'scaleX(-1)' : '';
+        });
+
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            const elem = document.getElementById('videoContainer');
+            if (elem.requestFullscreen) elem.requestFullscreen();
+        });
+
+        document.getElementById('clearRecords').addEventListener('click', () => {
+            detectionRecords = [];
+            updateRecordsList();
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                const isActive = btn.classList.contains('active');
+                
+                if (isActive) {
+                    // 如果点击的是当前激活的模式，则取消该模式
+                    btn.classList.remove('active');
+                    selectedClasses.clear();
+                    currentMode = 'none';
+                    // 同时清除所有类别按钮的激活状态
+                    document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
+                } else {
+                    // 切换到新模式
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateDetectionMode(mode);
+                }
+            });
+        });
+
+        document.querySelectorAll('.class-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();  // 防止事件冒泡
+                const cls = btn.dataset.class;
+                
+                // 切换选中状态
+                if (selectedClasses.has(cls)) {
+                    selectedClasses.delete(cls);
+                    btn.classList.remove('active');
+                } else {
+                    selectedClasses.add(cls);
+                    btn.classList.add('active');
+                }
+                
+                // 更新检测模式按钮状态
+                const currentSelected = Array.from(selectedClasses);
+                const humanClasses = ['person'];
+                const petClasses = ['cat', 'dog', 'bird'];
+                const allClasses = ['person', 'cat', 'dog', 'bird', 'horse', 'cow', 'sheep', 'elephant'];
+                
+                // 清除所有模式按钮的激活状态
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                
+                // 检查当前选中的类别是否与任何预设模式匹配
+                if (currentSelected.length === 0) {
+                    currentMode = 'none';
+                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(humanClasses.sort())) {
+                    currentMode = 'human';
+                    document.querySelector('.mode-btn[data-mode="human"]').classList.add('active');
+                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(petClasses.sort())) {
+                    currentMode = 'pet';
+                    document.querySelector('.mode-btn[data-mode="pet"]').classList.add('active');
+                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(allClasses.sort())) {
+                    currentMode = 'all';
+                    document.querySelector('.mode-btn[data-mode="all"]').classList.add('active');
+                } else {
+                    currentMode = 'custom';
+                }
+            });
+        });
+
+        document.getElementById('confidence').addEventListener('input', (e) => {
+            config.confidenceThreshold = e.target.value / 100;
+            document.getElementById('confidenceValue').textContent = e.target.value;
+        });
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            config.soundEnabled = this.classList.contains('active');
+        });
+
+        document.getElementById('notificationToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            config.notificationEnabled = this.classList.contains('active');
+            if (config.notificationEnabled && 'Notification' in window) {
+                Notification.requestPermission();
+            }
+        });
+
+        // Initialize
+        loadModel();
+        loadCameras();
+        if ('Notification' in window) Notification.requestPermission();
+
+        // Image Modal Events
+        const imageModal = document.getElementById('imageModal');
+        const modalCloseBtn = document.querySelector('.image-modal-close');
+        
+        modalCloseBtn.addEventListener('click', () => {
+            imageModal.classList.remove('active');
+        });
+        
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                imageModal.classList.remove('active');
+            }
+        });
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageModal.classList.contains('active')) {
+                imageModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
