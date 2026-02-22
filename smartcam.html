@@ -206,7 +206,7 @@
         /* Class Selector */
         .class-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
         }
 
@@ -1066,15 +1066,18 @@
 
             /* 类别选择器 - 紧凑 */
             .class-grid {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 3px;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 2px;
             }
 
             .class-btn {
-                padding: 5px 3px;
-                font-size: 0.6rem;
+                padding: 4px 2px;
+                font-size: 0.55rem;
                 justify-content: center;
                 min-height: auto;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             /* 显示移动端快速设置，隐藏桌面端设置 */
@@ -1323,7 +1326,13 @@
             }
 
             .class-grid {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(5, 1fr);
+                gap: 2px;
+            }
+
+            .class-btn {
+                padding: 3px 1px;
+                font-size: 0.5rem;
             }
 
             .video-panel {
@@ -1474,6 +1483,14 @@
                         <span class="icon">🐱</span>
                         <span>宠物</span>
                     </button>
+                    <button class="mode-btn" data-mode="vehicle">
+                        <span class="icon">🚗</span>
+                        <span>交通</span>
+                    </button>
+                    <button class="mode-btn" data-mode="object">
+                        <span class="icon">📦</span>
+                        <span>物品</span>
+                    </button>
                     <button class="mode-btn" data-mode="all">
                         <span class="icon">🎯</span>
                         <span>全部</span>
@@ -1516,6 +1533,7 @@
                     检测类别
                 </div>
                 <div class="class-grid" id="classSelector">
+                    <!-- 人物动物 -->
                     <button class="class-btn active" data-class="person">👤 人体</button>
                     <button class="class-btn" data-class="cat">🐱 猫</button>
                     <button class="class-btn" data-class="dog">🐕 狗</button>
@@ -1524,6 +1542,35 @@
                     <button class="class-btn" data-class="cow">🐄 牛</button>
                     <button class="class-btn" data-class="sheep">🐑 羊</button>
                     <button class="class-btn" data-class="elephant">🐘 象</button>
+                    <!-- 交通工具 -->
+                    <button class="class-btn" data-class="car">🚗 汽车</button>
+                    <button class="class-btn" data-class="truck">🚚 卡车</button>
+                    <button class="class-btn" data-class="bus">🚌 公交</button>
+                    <button class="class-btn" data-class="motorcycle">🏍️ 摩托</button>
+                    <button class="class-btn" data-class="bicycle">🚲 自行车</button>
+                    <button class="class-btn" data-class="airplane">✈️ 飞机</button>
+                    <button class="class-btn" data-class="boat">🚢 船</button>
+                    <button class="class-btn" data-class="train">🚂 火车</button>
+                    <!-- 其他物体 -->
+                    <button class="class-btn" data-class="backpack">🎒 背包</button>
+                    <button class="class-btn" data-class="umbrella">☂️ 雨伞</button>
+                    <button class="class-btn" data-class="suitcase">🧳 行李箱</button>
+                    <button class="class-btn" data-class="sports ball">⚽ 球</button>
+                    <button class="class-btn" data-class="kite">🪁 风筝</button>
+                    <button class="class-btn" data-class="skateboard">🛹 滑板</button>
+                    <button class="class-btn" data-class="bottle">🍶 瓶子</button>
+                    <button class="class-btn" data-class="cup">☕ 杯子</button>
+                    <button class="class-btn" data-class="chair">🪑 椅子</button>
+                    <button class="class-btn" data-class="couch">🛋️ 沙发</button>
+                    <button class="class-btn" data-class="bed">🛏️ 床</button>
+                    <button class="class-btn" data-class="dining table">🪑 餐桌</button>
+                    <button class="class-btn" data-class="tv">📺 电视</button>
+                    <button class="class-btn" data-class="laptop">💻 笔记本</button>
+                    <button class="class-btn" data-class="cell phone">📱 手机</button>
+                    <button class="class-btn" data-class="book">📖 书</button>
+                    <button class="class-btn" data-class="clock">🕐 时钟</button>
+                    <button class="class-btn" data-class="vase">🏺 花瓶</button>
+                    <button class="class-btn" data-class="teddy bear">🧸 泰迪熊</button>
                 </div>
             </div>
 
@@ -1695,8 +1742,19 @@
     <script src="models/ort.min.js"></script>
     <script>
         const CLASS_NAMES = {
+            // 人物动物
             'person': '人体', 'cat': '猫', 'dog': '狗', 'bird': '鸟',
-            'horse': '马', 'cow': '牛', 'sheep': '羊', 'elephant': '象'
+            'horse': '马', 'cow': '牛', 'sheep': '羊', 'elephant': '象',
+            // 交通工具
+            'car': '汽车', 'truck': '卡车', 'bus': '公交车', 'motorcycle': '摩托车',
+            'bicycle': '自行车', 'airplane': '飞机', 'boat': '船', 'train': '火车',
+            // 其他物体
+            'backpack': '背包', 'umbrella': '雨伞', 'suitcase': '行李箱',
+            'sports ball': '球', 'kite': '风筝', 'skateboard': '滑板',
+            'bottle': '瓶子', 'cup': '杯子', 'chair': '椅子', 'couch': '沙发',
+            'bed': '床', 'dining table': '餐桌', 'tv': '电视', 'laptop': '笔记本',
+            'cell phone': '手机', 'book': '书', 'clock': '时钟', 'vase': '花瓶',
+            'teddy bear': '泰迪熊'
         };
 
         let model = null;
@@ -2445,6 +2503,37 @@
                 selectedClasses.add('cat');
                 selectedClasses.add('dog');
                 selectedClasses.add('bird');
+            } else if (mode === 'vehicle') {
+                // 交通工具模式：检测各种交通工具
+                selectedClasses.add('car');
+                selectedClasses.add('truck');
+                selectedClasses.add('bus');
+                selectedClasses.add('motorcycle');
+                selectedClasses.add('bicycle');
+                selectedClasses.add('airplane');
+                selectedClasses.add('boat');
+                selectedClasses.add('train');
+            } else if (mode === 'object') {
+                // 物品模式：检测常见物品
+                selectedClasses.add('backpack');
+                selectedClasses.add('umbrella');
+                selectedClasses.add('suitcase');
+                selectedClasses.add('sports ball');
+                selectedClasses.add('kite');
+                selectedClasses.add('skateboard');
+                selectedClasses.add('bottle');
+                selectedClasses.add('cup');
+                selectedClasses.add('chair');
+                selectedClasses.add('couch');
+                selectedClasses.add('bed');
+                selectedClasses.add('dining table');
+                selectedClasses.add('tv');
+                selectedClasses.add('laptop');
+                selectedClasses.add('cell phone');
+                selectedClasses.add('book');
+                selectedClasses.add('clock');
+                selectedClasses.add('vase');
+                selectedClasses.add('teddy bear');
             } else if (mode === 'all') {
                 // 全部模式：启用所有类别
                 selectedClasses.add('person');
@@ -2455,8 +2544,35 @@
                 selectedClasses.add('cow');
                 selectedClasses.add('sheep');
                 selectedClasses.add('elephant');
+                selectedClasses.add('car');
+                selectedClasses.add('truck');
+                selectedClasses.add('bus');
+                selectedClasses.add('motorcycle');
+                selectedClasses.add('bicycle');
+                selectedClasses.add('airplane');
+                selectedClasses.add('boat');
+                selectedClasses.add('train');
+                selectedClasses.add('backpack');
+                selectedClasses.add('umbrella');
+                selectedClasses.add('suitcase');
+                selectedClasses.add('sports ball');
+                selectedClasses.add('kite');
+                selectedClasses.add('skateboard');
+                selectedClasses.add('bottle');
+                selectedClasses.add('cup');
+                selectedClasses.add('chair');
+                selectedClasses.add('couch');
+                selectedClasses.add('bed');
+                selectedClasses.add('dining table');
+                selectedClasses.add('tv');
+                selectedClasses.add('laptop');
+                selectedClasses.add('cell phone');
+                selectedClasses.add('book');
+                selectedClasses.add('clock');
+                selectedClasses.add('vase');
+                selectedClasses.add('teddy bear');
             }
-
+            
             // 更新类别按钮状态
             document.querySelectorAll('.class-btn').forEach(btn => {
                 btn.classList.toggle('active', selectedClasses.has(btn.dataset.class));
@@ -2529,7 +2645,9 @@
                 const currentSelected = Array.from(selectedClasses);
                 const humanClasses = ['person'];
                 const petClasses = ['cat', 'dog', 'bird'];
-                const allClasses = ['person', 'cat', 'dog', 'bird', 'horse', 'cow', 'sheep', 'elephant'];
+                const vehicleClasses = ['car', 'truck', 'bus', 'motorcycle', 'bicycle', 'airplane', 'boat', 'train'];
+                const objectClasses = ['backpack', 'umbrella', 'suitcase', 'sports ball', 'kite', 'skateboard', 'bottle', 'cup', 'chair', 'couch', 'bed', 'dining table', 'tv', 'laptop', 'cell phone', 'book', 'clock', 'vase', 'teddy bear'];
+                const allClasses = ['person', 'cat', 'dog', 'bird', 'horse', 'cow', 'sheep', 'elephant', 'car', 'truck', 'bus', 'motorcycle', 'bicycle', 'airplane', 'boat', 'train', 'backpack', 'umbrella', 'suitcase', 'sports ball', 'kite', 'skateboard', 'bottle', 'cup', 'chair', 'couch', 'bed', 'dining table', 'tv', 'laptop', 'cell phone', 'book', 'clock', 'vase', 'teddy bear'];
                 
                 // 清除所有模式按钮的激活状态
                 document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -2543,6 +2661,12 @@
                 } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(petClasses.sort())) {
                     currentMode = 'pet';
                     document.querySelector('.mode-btn[data-mode="pet"]').classList.add('active');
+                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(vehicleClasses.sort())) {
+                    currentMode = 'vehicle';
+                    document.querySelector('.mode-btn[data-mode="vehicle"]').classList.add('active');
+                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(objectClasses.sort())) {
+                    currentMode = 'object';
+                    document.querySelector('.mode-btn[data-mode="object"]').classList.add('active');
                 } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(allClasses.sort())) {
                     currentMode = 'all';
                     document.querySelector('.mode-btn[data-mode="all"]').classList.add('active');
