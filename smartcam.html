@@ -3010,12 +3010,12 @@
                         predictions = await model.detect(video);
                     }
                     
-                    const filtered = predictions.filter(p => 
+                    const filteredPredictions = predictions.filter(p => 
                         selectedClasses.has(p.class) && p.score >= config.confidenceThreshold
                     );
 
                     let detectionCount = 0;
-                    filtered.forEach(p => {
+                    filteredPredictions.forEach(p => {
                         detectionCount++;
                         const [x, y, w, h] = p.bbox;
                         ctx.strokeStyle = '#f0883e';
@@ -3310,6 +3310,7 @@
         function updateDetectionMode(mode) {
             currentMode = mode;
             selectedClasses.clear();
+            studyConfig.enabled = false;  // 默认禁用学习模式
             
             if (mode === 'human') {
                 // 人体模式：只检测人体
@@ -3523,8 +3524,13 @@
                 const petClasses = ['cat', 'dog', 'bird'];
                 const vehicleClasses = ['car', 'truck', 'bus', 'motorcycle', 'bicycle', 'airplane', 'boat', 'train'];
                 const objectClasses = ['backpack', 'umbrella', 'suitcase', 'sports ball', 'kite', 'skateboard', 'bottle', 'cup', 'chair', 'couch', 'bed', 'dining table', 'tv', 'laptop', 'cell phone', 'book', 'clock', 'vase', 'teddy bear'];
-                const studyClasses = ['person'];
                 const allClasses = ['person', 'cat', 'dog', 'bird', 'horse', 'cow', 'sheep', 'elephant', 'car', 'truck', 'bus', 'motorcycle', 'bicycle', 'airplane', 'boat', 'train', 'backpack', 'umbrella', 'suitcase', 'sports ball', 'kite', 'skateboard', 'bottle', 'cup', 'chair', 'couch', 'bed', 'dining table', 'tv', 'laptop', 'cell phone', 'book', 'clock', 'vase', 'teddy bear'];
+                
+                // 如果当前是学习模式，保持学习模式状态
+                if (currentMode === 'study' && currentSelected.includes('person')) {
+                    document.querySelector('.mode-btn[data-mode="study"]').classList.add('active');
+                    return;  // 保持学习模式，不切换
+                }
                 
                 // 清除所有模式按钮的激活状态
                 document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -3549,10 +3555,6 @@
                     currentMode = 'object';
                     studyConfig.enabled = false;
                     document.querySelector('.mode-btn[data-mode="object"]').classList.add('active');
-                } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(studyClasses.sort())) {
-                    currentMode = 'study';
-                    studyConfig.enabled = true;
-                    document.querySelector('.mode-btn[data-mode="study"]').classList.add('active');
                 } else if (JSON.stringify(currentSelected.sort()) === JSON.stringify(allClasses.sort())) {
                     currentMode = 'all';
                     studyConfig.enabled = false;
