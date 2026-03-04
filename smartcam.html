@@ -838,6 +838,80 @@
             font-size: 0.9rem;
         }
 
+        /* 行为截图样式 */
+        .log-snapshot {
+            margin: 8px 0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .log-snapshot img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .log-snapshot img:hover {
+            transform: scale(1.02);
+        }
+
+        /* 截图预览模态框 */
+        .snapshot-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .snapshot-modal.active {
+            display: flex;
+        }
+
+        .snapshot-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .snapshot-modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: var(--radius-md);
+        }
+
+        .snapshot-modal-label {
+            text-align: center;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            margin-top: -4px;
+        }
+
+        .snapshot-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+        }
+
         .records-list {
             flex: 1;
             overflow-y: auto;
@@ -2025,8 +2099,8 @@
         const studyConfig = {
             enabled: false,
             facePositionHistory: [],
-            maxHistoryLength: 10,
-            distractionThreshold: 3,
+            maxHistoryLength: 5,
+            distractionThreshold: 1,
             lastFocusState: 'unknown',
             focusStartTime: null,
             totalFocusTime: 0,
@@ -2035,11 +2109,14 @@
             consecutiveDistractedFrames: 0,
             consecutiveFocusedFrames: 0,
             lastAlertTime: 0,
-            alertCooldown: 2000
+            lastSnapshotTime: 0,
+            alertCooldown: 1500,
+            snapshotCooldown: 3000,
+            behaviorSnapshots: []
         };
 
-        // 专注状态分析 - 改进版
-        function analyzeFocusState(detections, canvasWidth, canvasHeight) {
+        // 专注状态分析 - 改进版（超高灵敏度）
+        function analyzeFocusState(detections, canvasWidth, canvasHeight, canvas) {
             const personDetection = detections.find(d => d.class === 'person' && d.score >= config.confidenceThreshold);
             
             if (!personDetection) {
@@ -2161,9 +2238,9 @@
                 studyConfig.consecutiveDistractedFrames = 0;
             }
 
-            // 只有连续多帧检测到分心才记录（防止误报）
-            if (studyConfig.consecutiveDistractedFrames >= 2 || studyConfig.consecutiveFocusedFrames >= 3) {
-                logBehavior(state, message);
+            // 立即记录任何分心状态（提高灵敏度）
+            if (studyConfig.consecutiveDistractedFrames >= 1 || studyConfig.consecutiveFocusedFrames >= 2) {
+                logBehavior(state, message, canvas);
             }
 
             return {
@@ -2247,17 +2324,24 @@
             return { isLeaning, leanAngle };
         }
 
-        // 记录行为日志
-        function logBehavior(state, message) {
+        // 记录行为日志并截图
+        function logBehavior(state, message, canvas = null) {
             const now = Date.now();
             
             // 状态变化时记录
             if (state !== studyConfig.lastFocusState) {
+                // 如果检测到分心，截图
+                let snapshot = null;
+                if (canvas && (state === 'distracted' || state === 'restless' || state === 'warning')) {
+                    snapshot = canvas.toDataURL('image/jpeg', 0.7);
+                }
+                
                 const logEntry = {
                     timestamp: now,
                     state: state,
                     message: message,
-                    duration: studyConfig.focusStartTime ? now - studyConfig.focusStartTime : 0
+                    duration: studyConfig.focusStartTime ? now - studyConfig.focusStartTime : 0,
+                    snapshot: snapshot
                 };
                 
                 studyConfig.behaviorLogs.push(logEntry);
@@ -2282,7 +2366,7 @@
                 updateStudyStats();
 
                 // 触发报警（如果启用）
-                if (!studyConfig.isFocused && config.soundEnabled) {
+                if (state !== 'focused' && state !== 'no_person' && config.soundEnabled) {
                     playAlertSound();
                 }
             }
@@ -2346,7 +2430,7 @@
             }
         }
 
-        // 显示行为记录面板
+        // 显示行为记录面板（带截图）
         function showBehaviorLogs() {
             const modal = document.getElementById('behaviorLogsModal');
             const list = document.getElementById('behaviorLogsList');
@@ -2357,7 +2441,7 @@
             if (studyConfig.behaviorLogs.length === 0) {
                 list.innerHTML = '<div class="empty-logs">暂无行为记录</div>';
             } else {
-                list.innerHTML = studyConfig.behaviorLogs.slice().reverse().map(log => {
+                list.innerHTML = studyConfig.behaviorLogs.slice().reverse().map((log, index) => {
                     const time = new Date(log.timestamp).toLocaleTimeString('zh-CN');
                     const duration = log.duration > 0 ? `(${Math.round(log.duration / 1000)}秒)` : '';
                     let stateClass = '';
@@ -2365,8 +2449,16 @@
                     else if (log.state === 'distracted' || log.state === 'restless') stateClass = 'log-distracted';
                     else if (log.state === 'warning') stateClass = 'log-warning';
                     
+                    // 如果有截图，显示截图
+                    const snapshotHtml = log.snapshot ? `
+                        <div class="log-snapshot">
+                            <img src="${log.snapshot}" alt="行为截图" onclick="showSnapshotModal('${log.snapshot}', '${log.message}')">
+                        </div>
+                    ` : '';
+                    
                     return `
-                        <div class="behavior-log-item ${stateClass}">
+                        <div class="behavior-log-item ${stateClass}" id="logItem${index}">
+                            ${snapshotHtml}
                             <div class="log-time">${time} ${duration}</div>
                             <div class="log-message">${log.message}</div>
                         </div>
@@ -2942,7 +3034,7 @@
 
                     // 学习模式：专注状态分析
                     if (currentMode === 'study' && studyConfig.enabled) {
-                        const focusResult = analyzeFocusState(filteredPredictions, canvas.width, canvas.height);
+                        const focusResult = analyzeFocusState(filteredPredictions, canvas.width, canvas.height, canvas);
                         
                         // 显示专注状态
                         if (focusResult.state !== 'no_person') {
@@ -3825,6 +3917,34 @@
             screenHeight: window.innerHeight,
             userAgent: navigator.userAgent
         });
+    </script>
+
+    <!-- 截图预览模态框 -->
+    <div class="snapshot-modal" id="snapshotModal" onclick="closeSnapshotModal(event)">
+        <div class="snapshot-modal-content">
+            <button class="snapshot-modal-close" onclick="closeSnapshotModal(event)">&times;</button>
+            <img id="snapshotModalImg" src="" alt="行为截图">
+            <div class="snapshot-modal-label" id="snapshotModalLabel"></div>
+        </div>
+    </div>
+
+    <script>
+        // 截图预览功能
+        function showSnapshotModal(snapshotUrl, message) {
+            const modal = document.getElementById('snapshotModal');
+            const img = document.getElementById('snapshotModalImg');
+            const label = document.getElementById('snapshotModalLabel');
+            
+            img.src = snapshotUrl;
+            label.textContent = message;
+            modal.classList.add('active');
+        }
+
+        function closeSnapshotModal(event) {
+            if (event.target === event.currentTarget || event.target.classList.contains('snapshot-modal-close')) {
+                document.getElementById('snapshotModal').classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html>
