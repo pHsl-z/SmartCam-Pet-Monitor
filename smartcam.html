@@ -1779,25 +1779,32 @@
         const studyConfig = {
             enabled: false,
             facePositionHistory: [],
-            maxHistoryLength: 30,
-            distractionThreshold: 5,
+            maxHistoryLength: 10,
+            distractionThreshold: 3,
             lastFocusState: 'unknown',
             focusStartTime: null,
             totalFocusTime: 0,
             distractionCount: 0,
-            behaviorLogs: []
+            behaviorLogs: [],
+            consecutiveDistractedFrames: 0,
+            consecutiveFocusedFrames: 0,
+            lastAlertTime: 0,
+            alertCooldown: 2000
         };
 
-        // 专注状态分析
+        // 专注状态分析 - 改进版
         function analyzeFocusState(detections, canvasWidth, canvasHeight) {
             const personDetection = detections.find(d => d.class === 'person' && d.score >= config.confidenceThreshold);
             
             if (!personDetection) {
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
                 return {
                     state: 'no_person',
                     message: '未检测到学生',
                     color: '#8b949e',
-                    isFocused: false
+                    isFocused: false,
+                    debug: { reason: 'no_detection' }
                 };
             }
 
@@ -1807,17 +1814,24 @@
             const imageCenterX = canvasWidth / 2;
             const imageCenterY = canvasHeight / 2;
 
-            // 计算人脸相对于画面中心的位置
-            const offsetX = centerX - imageCenterX;
-            const offsetY = centerY - imageCenterY;
-            const normalizedOffsetX = offsetX / (canvasWidth / 2);
-            const normalizedOffsetY = offsetY / (canvasHeight / 2);
+            // 计算人体相对于画面中心的位置（使用更敏感的归一化）
+            const offsetX = (centerX - imageCenterX) / (canvasWidth / 2);
+            const offsetY = (centerY - imageCenterY) / (canvasHeight / 2);
+            const distanceFromCenter = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
 
+            // 计算人体占画面比例（判断远近）
+            const personAreaRatio = (width * height) / (canvasWidth * canvasHeight);
+            
             // 保存位置历史
+            const now = Date.now();
             studyConfig.facePositionHistory.push({
-                x: normalizedOffsetX,
-                y: normalizedOffsetY,
-                timestamp: Date.now()
+                x: centerX,
+                y: centerY,
+                offsetX: offsetX,
+                offsetY: offsetY,
+                width: width,
+                height: height,
+                timestamp: now
             });
 
             // 限制历史记录长度
@@ -1828,68 +1842,163 @@
             // 分析移动趋势
             const movement = analyzeMovement();
             
-            // 判断专注状态
+            // 分析姿态变化
+            const posture = analyzePosture();
+            
+            // 判断专注状态 - 使用更敏感的阈值
             let state, message, color, isFocused;
+            let debugInfo = {};
 
-            if (Math.abs(normalizedOffsetX) > 0.4 || Math.abs(normalizedOffsetY) > 0.4) {
-                // 严重偏离中心
+            // 检测逻辑（按优先级排序）
+            if (personAreaRatio < 0.05) {
+                // 人体太小，可能离摄像头太远或不在主要位置
+                state = 'distracted';
+                message = '⚠️ 学生离摄像头太远';
+                color = '#f85149';
+                isFocused = false;
+                debugInfo = { reason: 'too_far', ratio: personAreaRatio.toFixed(3) };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
+            } else if (distanceFromCenter > 0.25) {
+                // 偏离中心（降低阈值从0.4到0.25）
                 state = 'distracted';
                 message = '⚠️ 注意力分散 - 学生看向别处';
                 color = '#f85149';
                 isFocused = false;
+                debugInfo = { reason: 'off_center', distance: distanceFromCenter.toFixed(3) };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
             } else if (movement.isMovingFast) {
-                // 快速移动
+                // 快速移动（降低阈值）
                 state = 'restless';
                 message = '⚠️ 坐立不安 - 频繁移动';
                 color = '#f85149';
                 isFocused = false;
-            } else if (Math.abs(normalizedOffsetX) > 0.2 || Math.abs(normalizedOffsetY) > 0.2) {
-                // 轻微偏离
+                debugInfo = { reason: 'moving_fast', speed: movement.speed.toFixed(3) };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
+            } else if (movement.isShaking) {
+                // 身体晃动
+                state = 'restless';
+                message = '⚠️ 身体晃动 - 请保持静止';
+                color = '#f85149';
+                isFocused = false;
+                debugInfo = { reason: 'shaking', shakeCount: movement.shakeCount };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
+            } else if (posture.isLeaning) {
+                // 身体倾斜
+                state = 'warning';
+                message = '⚡ 姿势不正 - 请坐端正';
+                color = '#f0883e';
+                isFocused = false;
+                debugInfo = { reason: 'leaning', leanAngle: posture.leanAngle.toFixed(1) };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
+            } else if (distanceFromCenter > 0.12) {
+                // 轻微偏离（降低阈值从0.2到0.12）
                 state = 'warning';
                 message = '⚡ 轻微走神 - 请集中注意力';
                 color = '#f0883e';
                 isFocused = false;
+                debugInfo = { reason: 'slight_off', distance: distanceFromCenter.toFixed(3) };
+                studyConfig.consecutiveDistractedFrames++;
+                studyConfig.consecutiveFocusedFrames = 0;
             } else {
                 // 专注状态
                 state = 'focused';
                 message = '✅ 专注学习中';
                 color = '#3fb950';
                 isFocused = true;
+                debugInfo = { reason: 'focused', distance: distanceFromCenter.toFixed(3) };
+                studyConfig.consecutiveFocusedFrames++;
+                studyConfig.consecutiveDistractedFrames = 0;
             }
 
-            // 记录行为日志
-            logBehavior(state, message);
+            // 只有连续多帧检测到分心才记录（防止误报）
+            if (studyConfig.consecutiveDistractedFrames >= 2 || studyConfig.consecutiveFocusedFrames >= 3) {
+                logBehavior(state, message);
+            }
 
             return {
                 state,
                 message,
                 color,
                 isFocused,
-                offsetX: normalizedOffsetX,
-                offsetY: normalizedOffsetY,
-                movement: movement.speed
+                offsetX,
+                offsetY,
+                distance: distanceFromCenter,
+                movement: movement.speed,
+                debug: debugInfo
             };
         }
 
-        // 分析移动趋势
+        // 分析移动趋势 - 改进版
         function analyzeMovement() {
             const history = studyConfig.facePositionHistory;
-            if (history.length < 5) {
-                return { isMovingFast: false, speed: 0 };
+            if (history.length < 3) {
+                return { isMovingFast: false, isShaking: false, speed: 0, shakeCount: 0 };
             }
 
             let totalMovement = 0;
+            let directionChanges = 0;
+            let lastDirectionX = 0;
+            let lastDirectionY = 0;
+
             for (let i = 1; i < history.length; i++) {
                 const dx = history[i].x - history[i-1].x;
                 const dy = history[i].y - history[i-1].y;
-                totalMovement += Math.sqrt(dx * dx + dy * dy);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                totalMovement += distance;
+
+                // 检测方向变化（晃动）
+                if (i > 1) {
+                    const currentDirectionX = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+                    const currentDirectionY = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+                    
+                    if ((currentDirectionX !== 0 && currentDirectionX !== lastDirectionX) ||
+                        (currentDirectionY !== 0 && currentDirectionY !== lastDirectionY)) {
+                        directionChanges++;
+                    }
+                    
+                    lastDirectionX = currentDirectionX;
+                    lastDirectionY = currentDirectionY;
+                }
             }
 
             const avgSpeed = totalMovement / (history.length - 1);
+            const timeSpan = history[history.length - 1].timestamp - history[0].timestamp;
+            const normalizedSpeed = timeSpan > 0 ? (avgSpeed / timeSpan) * 1000 : 0;
+
             return {
-                isMovingFast: avgSpeed > 0.15,
-                speed: avgSpeed
+                isMovingFast: normalizedSpeed > 0.08,
+                isShaking: directionChanges >= 3,
+                speed: normalizedSpeed,
+                shakeCount: directionChanges
             };
+        }
+
+        // 分析姿态
+        function analyzePosture() {
+            const history = studyConfig.facePositionHistory;
+            if (history.length < 2) {
+                return { isLeaning: false, leanAngle: 0 };
+            }
+
+            const recent = history.slice(-3);
+            let totalWidthChange = 0;
+            let totalHeightChange = 0;
+
+            for (let i = 1; i < recent.length; i++) {
+                totalWidthChange += Math.abs(recent[i].width - recent[i-1].width);
+                totalHeightChange += Math.abs(recent[i].height - recent[i-1].height);
+            }
+
+            // 如果宽度变化大但高度变化小，可能是侧身
+            const isLeaning = totalWidthChange > totalHeightChange * 1.5;
+            const leanAngle = Math.atan2(totalHeightChange, totalWidthChange) * (180 / Math.PI);
+
+            return { isLeaning, leanAngle };
         }
 
         // 记录行为日志
@@ -2480,30 +2589,61 @@
                         
                         // 显示专注状态
                         if (focusResult.state !== 'no_person') {
+                            // 显示状态文字
                             ctx.fillStyle = focusResult.color;
-                            ctx.font = 'bold 16px sans-serif';
+                            ctx.font = 'bold 18px sans-serif';
                             ctx.fillText(focusResult.message, 10, 30);
+                            
+                            // 显示调试信息
+                            ctx.font = '12px monospace';
+                            ctx.fillStyle = '#fff';
+                            const debugText = `距离: ${focusResult.distance.toFixed(2)} 移动: ${focusResult.movement.toFixed(3)}`;
+                            ctx.fillText(debugText, 10, 50);
+                            
+                            // 绘制中心参考圆
+                            ctx.beginPath();
+                            ctx.arc(canvas.width / 2, canvas.height / 2, 20, 0, 2 * Math.PI);
+                            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
                             
                             // 绘制位置指示器
                             const indicatorX = canvas.width / 2 + focusResult.offsetX * canvas.width / 2;
                             const indicatorY = canvas.height / 2 + focusResult.offsetY * canvas.height / 2;
                             ctx.beginPath();
-                            ctx.arc(indicatorX, indicatorY, 8, 0, 2 * Math.PI);
+                            ctx.arc(indicatorX, indicatorY, 10, 0, 2 * Math.PI);
                             ctx.fillStyle = focusResult.color;
                             ctx.fill();
                             ctx.strokeStyle = '#fff';
-                            ctx.lineWidth = 2;
+                            ctx.lineWidth = 3;
                             ctx.stroke();
+                            
+                            // 绘制连线
+                            ctx.beginPath();
+                            ctx.moveTo(canvas.width / 2, canvas.height / 2);
+                            ctx.lineTo(indicatorX, indicatorY);
+                            ctx.strokeStyle = focusResult.color;
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([5, 5]);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
                         }
                         
                         // 更新状态显示
                         updateStatus(focusResult.message, !focusResult.isFocused);
                         
-                        // 如果分心，显示警告
+                        // 如果分心，显示警告（添加冷却时间防止频繁报警）
+                        const now = Date.now();
                         if (!focusResult.isFocused && focusResult.state !== 'no_person') {
                             document.getElementById('alertBanner').classList.add('active');
                             document.getElementById('alertBanner').textContent = focusResult.message;
                             document.getElementById('alertBanner').style.background = focusResult.color;
+                            
+                            // 播放提醒音（带冷却）
+                            if (config.soundEnabled && now - studyConfig.lastAlertTime > studyConfig.alertCooldown) {
+                                playAlertSound();
+                                studyConfig.lastAlertTime = now;
+                            }
                         } else {
                             document.getElementById('alertBanner').classList.remove('active');
                         }
