@@ -2365,8 +2365,8 @@
                 // 更新统计显示
                 updateStudyStats();
 
-                // 触发报警（如果启用）
-                if (state !== 'focused' && state !== 'no_person' && config.soundEnabled) {
+                // 触发报警（如果启用）- 包括未检测到学生的情况
+                if (state !== 'focused' && config.soundEnabled) {
                     playAlertSound();
                 }
             }
@@ -3081,9 +3081,9 @@
                         // 更新状态显示
                         updateStatus(focusResult.message, !focusResult.isFocused);
                         
-                        // 如果分心，显示警告（添加冷却时间防止频繁报警）
+                        // 如果分心或未检测到学生，显示警告
                         const now = Date.now();
-                        if (!focusResult.isFocused && focusResult.state !== 'no_person') {
+                        if (!focusResult.isFocused) {
                             document.getElementById('alertBanner').classList.add('active');
                             document.getElementById('alertBanner').textContent = focusResult.message;
                             document.getElementById('alertBanner').style.background = focusResult.color;
